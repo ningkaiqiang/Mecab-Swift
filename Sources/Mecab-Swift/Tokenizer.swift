@@ -2,6 +2,7 @@ import mecab
 import Foundation
 import StringTools
 import Dictionary
+import Darwin
 
 /**
 A tokenizer /  morphological analyzer for Japanese
@@ -188,11 +189,76 @@ public class Tokenizer{
         return outString
     
     }
-    
+
+    public typealias FTS5TokenCallback = @convention(c) (
+        _ context: UnsafeMutableRawPointer?,
+        _ flags: CInt,
+        _ pToken: UnsafePointer<CChar>?,
+        _ nToken: CInt,
+        _ iStart: CInt,
+        _ iEnd: CInt)
+        -> CInt
+
+    @discardableResult
+    public func fts5(
+        context: UnsafeMutableRawPointer?,
+        pText: UnsafePointer<CChar>,
+        nText: CInt,
+        tokenCallback: FTS5TokenCallback
+    ) -> CInt {
+        var nlen: Int = 0
+        var tmp: UnsafeMutablePointer<CChar>
+        var buffer: UnsafeMutablePointer<CChar>
+        var bufferLength: Int = 256
+        var offset: CInt = 0
+        var rc: CInt = 0
+        
+        buffer = UnsafeMutablePointer<CChar>.allocate(capacity: Int(bufferLength))
+        var node: mecab_node_t? = mecab_sparse_tonode(_mecab, pText).pointee
+        guard var node = node else { return 0 }
+        while node != nil {
+            while node.next != nil && node.length == 0 {
+                offset += CInt(node.rlength)
+                node = node.next.pointee
+            }
+            nlen = Int(node.length)
+            offset += Int32((Int(node.rlength) - nlen))
+            if nlen > bufferLength {
+                let tmp = UnsafeMutablePointer<CChar>.allocate(capacity: nlen + 1)
+                tmp.initialize(from: buffer, count: nlen)
+                buffer.deallocate()
+                buffer = tmp
+                buffer[nlen] = 0
+                bufferLength = nlen
+            }
+            strncpy(buffer, node.surface, nlen)
+            buffer[nlen] = 0
+            rc = tokenCallback(context, 0, buffer, CInt(nlen), offset, offset + CInt(nlen))
+            
+            if rc != 0 {
+                break
+            }
+            offset += Int32(node.length)
+            node = node.next.pointee
+            if offset >= nText {
+                rc = 0
+                break
+            }
+        }
+        while node != nil {
+            node = node.next.pointee
+        }
+        nlen = 0
+        buffer.deallocate()
+        bufferLength = 0
+        offset = 0
+        return rc
+    }
+
     deinit {
         mecab_destroy(_mecab)
     }
-    
+
 }
 
 
