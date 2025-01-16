@@ -83,9 +83,10 @@ public extension String{
      */
     @available(OSX 10.11, *)
     func furiganaReplacements()->[FuriganaAnnotation]{
-        return self.systemTokenizerFuriganaAnnotations().compactMap {annotation in
+        return self.systemTokenizerFuriganaAnnotations().compactMap { annotation in
             let hiragana=SystemTokenizerAnnotation(base: annotation.base, reading: annotation.reading.hiraganaString, range: annotation.range)
-            return hiragana.furiganaAnnotation(for: self, kanjiOnly: true)}
+            return hiragana.furiganaAnnotation(for: self, kanjiOnly: true)
+        }.flatMap({ $0 })
         
     }
 }

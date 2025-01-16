@@ -30,7 +30,7 @@ public struct Annotation:Equatable, FuriganaAnnotating{
         self.init(base: token.original, reading: token.reading, range: range, dictionaryForm: token.dictionaryForm, transliteration: transliteration, POS: token.partOfSpeech)
     }
     
-    init(base:String, reading:String, range:Range<String.Index>, dictionaryForm:String, transliteration:Tokenizer.Transliteration, POS:PartOfSpeech = .unknown){
+    public init(base:String, reading:String, range:Range<String.Index>, dictionaryForm:String, transliteration:Tokenizer.Transliteration, POS:PartOfSpeech = .unknown){
         self.base=base
         self.range=range
         self.partOfSpeech = POS
@@ -76,7 +76,7 @@ public struct Annotation:Equatable, FuriganaAnnotating{
             - string: the underlying text for which the `FuriganaAnnotation` should be generated. This parameter is required because some options can change the range of the token in the base text.
      - returns: A  `FuriganaAnnotation`.
      */
-    public func furiganaAnnotation(options:[AnnotationOption] = [.kanjiOnly], for string:String)->FuriganaAnnotation?{
+    public func furiganaAnnotation(options:[AnnotationOption] = [.kanjiOnly], for string:String)->[FuriganaAnnotation]?{
         
          for case let AnnotationOption.filter(disallowed, strict) in options{
             let kanji=Set(self.base.kanjiCharacters)
@@ -95,7 +95,7 @@ public struct Annotation:Equatable, FuriganaAnnotating{
             return self.furiganaAnnotation(for: string, kanjiOnly: true)
         }
         else{
-            return FuriganaAnnotation(reading: self.reading , range: self.range)
+            return [FuriganaAnnotation(reading: self.reading , range: self.range)]
         }
     }
 }

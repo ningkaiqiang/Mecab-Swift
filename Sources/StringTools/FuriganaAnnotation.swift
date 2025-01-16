@@ -47,8 +47,11 @@ extension FuriganaAnnotation{
      A convenvenience function to create `CTRubyAnnotation` for Furigana display on `CoreText`
      - returns: A `CTRubyAnnotation`.
      */
-    public func rubyAnnotation(alignment:CTRubyAlignment = .auto, overhang:CTRubyOverhang = .auto, sizeFActor:CGFloat = 0.5, position:CTRubyPosition = .before, attributes:[NSAttributedString.Key:Any] = [:])->CTRubyAnnotation{
-        var finalAttributes:[CFString:Any]=[kCTRubyAnnotationSizeFactorAttributeName:sizeFActor]
+    public func rubyAnnotation(alignment:CTRubyAlignment = .auto, overhang:CTRubyOverhang = .auto, sizeFActor:CGFloat = 0.5, scaleToFit: Bool = false, position:CTRubyPosition = .before, attributes:[NSAttributedString.Key:Any] = [:])->CTRubyAnnotation{
+        var finalAttributes:[CFString:Any]=[
+            kCTRubyAnnotationSizeFactorAttributeName: sizeFActor,
+            kCTRubyAnnotationScaleToFitAttributeName: scaleToFit
+        ]
         for item in attributes{
             finalAttributes[item.key.rawValue as CFString]=item.value
         }

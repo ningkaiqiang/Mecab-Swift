@@ -158,6 +158,7 @@ public class Tokenizer{
         return self.tokenize(text: text, transliteration: transliteration)
             .filter({$0.base.isEmpty == false})
             .compactMap({$0.furiganaAnnotation(options: options, for: text)})
+            .flatMap({ $0 })
     }
     
     /**
@@ -216,6 +217,7 @@ public class Tokenizer{
         buffer = UnsafeMutablePointer<CChar>.allocate(capacity: Int(bufferLength))
         var node: mecab_node_t? = mecab_sparse_tonode(_mecab, pText).pointee
         guard var node = node else { return 0 }
+        if String(cString: node.surface).isEmpty { return 0 }
         while node != nil {
             while node.next != nil && node.length == 0 {
                 offset += CInt(node.rlength)
@@ -233,6 +235,7 @@ public class Tokenizer{
             }
             strncpy(buffer, node.surface, nlen)
             buffer[nlen] = 0
+//            print("match token: \(String(cString: buffer))")
             rc = tokenCallback(context, 0, buffer, CInt(nlen), offset, offset + CInt(nlen))
             
             if rc != 0 {
@@ -245,7 +248,7 @@ public class Tokenizer{
                 break
             }
         }
-        while node != nil {
+        while node != nil && node.next != nil {
             node = node.next.pointee
         }
         nlen = 0
